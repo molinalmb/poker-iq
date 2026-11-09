@@ -145,7 +145,14 @@ const positions = ["UTG", "HJ", "CO", "BTN", "SB", "BB"];
 const hands = [
   {
     cards: ["A♠","8♠"], hero: "BTN", stack: 12,
-    situation: "12 BB on the button. Folds to you. No ante. Both blinds have 20 BB.",
+opponentStacks: {
+  UTG: 25,
+  HJ: 32,
+  CO: 18,
+  SB: 20,
+  BB: 20
+},
+situation: "12 BB on the button. Folds to you. No ante. Both blinds have 20 BB.",
     choices: ["Fold","Raise to 2 BB","Shove"],
     correct: 2,
     why: "A8 suited is a reasonable shove candidate at 12 BB. Small raises can also work."
