@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poker IQ</title>
+  <style>
+    body {
+      background: #101827;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 25px;
+      text-align: center;
+    }
+    .card {
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 16px;
+      max-width: 500px;
+      margin: 30px auto;
+    }
+    h1 { color: #38bdf8; }
+    button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin: 12px 0;
+      border: 0;
+      border-radius: 9px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+    #result { line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1>POKER IQ</h1>
+  <p>Texas Hold'em Tournament Trainer</p>
+
+  <div class="card">
+    <h2>Hand #1</h2>
+    <p>Blinds: 1,000 / 2,000</p>
+    <p>Your stack: 24,000 (12 BB)</p>
+    <p>Position: Button</p>
+    <p>Your hand: A♠ 8♠</p>
+    <p>Everyone folds to you.</p>
+    <h3>What's your move?</h3>
+
+    <button onclick="answer('A')">A. Fold</button>
+    <button onclick="answer('B')">B. Raise to 4,000</button>
+    <button onclick="answer('C')">C. Go all-in</button>
+
+    <p id="result" aria-live="polite"></p>
+  </div>
+
+  <script>
+    function answer(choice) {
+      const result = document.getElementById("result");
+      if (choice === "C") {
+        result.textContent =
+          "Strong choice! With 12 BB on the button, " +
+          "shoving A8 suited can be profitable. " +
+          "Exact strategy depends on antes, " +
+          "opponents, and tournament ICM.";
+        result.style.color = "#4ade80";
+      } else {
+        result.textContent =
+          "Consider the all-in option. With 12 BB, " +
+          "A8 suited is a strong candidate to shove " +
+          "from the button. Raising small can also " +
+          "be viable in some situations.";
+        result.style.color = "#facc15";
+      }
+    }
+  </script>
+</body>
+</html>
