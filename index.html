@@ -258,6 +258,32 @@ function drawTable(h) {
 }
 
 function showHand() {
+  const tournamentLevels = [
+    {sb:500, bb:1000, ante:0, players:72},
+    {sb:500, bb:1000, ante:0, players:68},
+    {sb:1000, bb:2000, ante:0, players:60},
+    {sb:1000, bb:2000, ante:0, players:54},
+    {sb:1500, bb:3000, ante:0, players:48},
+    {sb:1500, bb:3000, ante:0, players:42},
+    {sb:2000, bb:4000, ante:0, players:36},
+    {sb:2000, bb:4000, ante:0, players:30},
+    {sb:3000, bb:6000, ante:0, players:24},
+    {sb:4000, bb:8000, ante:0, players:18}
+  ];
+  const level = tournamentLevels[index];
+  const format = n => n.toLocaleString("en-US");
+
+  document.getElementById("blinds").textContent =
+    "Blinds: " + format(level.sb) + " / " + format(level.bb);
+
+  document.getElementById("ante").textContent =
+    "Ante: " + format(level.ante);
+
+  document.getElementById("pot").textContent =
+    "Starting Pot: " + format(level.sb + level.bb);
+
+  document.getElementById("remaining").textContent =
+    "Players Remaining: " + level.players;
   answered = false;
   const h = hands[index];
   progress.textContent = "Hand " + (index + 1) + " / " + hands.length;
