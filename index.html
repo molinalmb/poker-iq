@@ -245,8 +245,9 @@ function drawTable(h) {
     seat.className = "seat s" + (i + 1);
     if (position === h.hero) seat.classList.add("hero");
 
-    const stack = position === h.hero ? h.stack
-      : (h.opponentsStaxks?.[position] ?? 20);
+    const stack = position === h.hero
+  ? h.stack
+  : (h.opponentStacks?.[position] ?? 20);
     seat.textContent =
       position + (position === h.hero ? " (YOU)" : "") +
       " | " + stack + " BB";
