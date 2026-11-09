@@ -308,6 +308,17 @@ function showHand() {
     "Players Remaining: " + level.players;
   answered = false;
   const h = hands[index];
+  const actionHistory =
+    document.getElementById("action-history");
+
+  if (index === 0) {
+    actionHistory.textContent =
+      "UTG folds → HJ folds → CO folds → " +
+      "BTN (YOU): Decision pending";
+  } else {
+    actionHistory.textContent =
+      "Preflop action coming soon...";
+  }
   progress.textContent = "Hand " + (index + 1) + " / " + hands.length;
   score.textContent = "Score: " + points;
   title.textContent = "Tournament Scenario";
