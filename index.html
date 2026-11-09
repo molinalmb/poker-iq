@@ -1,78 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Poker IQ</title>
-  <style>
-    body {
-      background: #101827;
-      color: white;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 25px;
-      text-align: center;
-    }
-    .card {
-      background: #1e293b;
-      padding: 24px;
-      border-radius: 16px;
-      max-width: 500px;
-      margin: 30px auto;
-    }
-    h1 { color: #38bdf8; }
-    button {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      margin: 12px 0;
-      border: 0;
-      border-radius: 9px;
-      font-size: 17px;
-      cursor: pointer;
-    }
-    #result { line-height: 1.6; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poker IQ | Tournament Trainer</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 20px;
+  background: #0b1424;
+  color: #f8fafc;
+  font-family: Arial, sans-serif;
+}
+main {
+  max-width: 560px;
+  margin: 20px auto;
+}
+h1 {
+  color: #38bdf8;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.subtitle {
+  text-align: center;
+  color: #94a3b8;
+}
+.panel {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 22px;
+  margin-top: 20px;
+}
+.stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #7dd3fc;
+  font-weight: bold;
+}
+.hand {
+  font-size: 30px;
+  text-align: center;
+  margin: 20px 0;
+}
+button {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  background: #334155;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:hover { background: #475569; }
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+#next {
+  background: #0284c7;
+  border: none;
+}
+#feedback {
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.correct { color: #86efac; }
+.incorrect { color: #fde68a; }
+</style>
 </head>
 <body>
-  <h1>POKER IQ</h1>
-  <p>Texas Hold'em Tournament Trainer</p>
+<main>
+  <h1>♠ POKER IQ</h1>
+  <p class="subtitle">Tournament Decision Trainer</p>
 
-  <div class="card">
-    <h2>Hand #1</h2>
-    <p>Blinds: 1,000 / 2,000</p>
-    <p>Your stack: 24,000 (12 BB)</p>
-    <p>Position: Button</p>
-    <p>Your hand: A♠ 8♠</p>
-    <p>Everyone folds to you.</p>
+  <div class="panel">
+    <div class="stats">
+      <span id="progress"></span>
+      <span id="score"></span>
+    </div>
+
+    <h2 id="title"></h2>
+    <div class="hand" id="cards"></div>
+    <p id="situation"></p>
     <h3>What's your move?</h3>
 
-    <button onclick="answer('A')">A. Fold</button>
-    <button onclick="answer('B')">B. Raise to 4,000</button>
-    <button onclick="answer('C')">C. Go all-in</button>
-
-    <p id="result" aria-live="polite"></p>
+    <div id="choices"></div>
+    <div id="feedback" aria-live="polite"></div>
+    <button id="next" hidden>Next Hand →</button>
   </div>
+</main>
 
-  <script>
-    function answer(choice) {
-      const result = document.getElementById("result");
-      if (choice === "C") {
-        result.textContent =
-          "Strong choice! With 12 BB on the button, " +
-          "shoving A8 suited can be profitable. " +
-          "Exact strategy depends on antes, " +
-          "opponents, and tournament ICM.";
-        result.style.color = "#4ade80";
-      } else {
-        result.textContent =
-          "Consider the all-in option. With 12 BB, " +
-          "A8 suited is a strong candidate to shove " +
-          "from the button. Raising small can also " +
-          "be viable in some situations.";
-        result.style.color = "#facc15";
-      }
-    }
-  </script>
+<script>
+const hands = [
+  {
+    cards: "A♠ 8♠",
+    situation: "12 BB on the button. Folds to you. " +
+      "No ante. Both blinds have 20 BB.",
+    choices: ["Fold", "Raise to 2 BB", "Shove"],
+    correct: 2,
+    why: "A8 suited is a reasonable shove candidate " +
+      "at 12 BB. Small raises can also work."
+  },
+  {
+    cards: "7♣ 2♦",
+    situation: "25 BB under the gun at a 9-handed " +
+      "table. No ante. Action is on you.",
+    choices: ["Open raise", "Fold", "Shove"],
+    correct: 1,
+    why: "72 offsuit is too weak to open from " +
+      "early position in this situation."
+  },
+  {
+    cards: "A♥ A♦",
+    situation: "30 BB in the cutoff. Everyone folds " +
+      "to you. No ante.",
+    choices: ["Fold", "Open raise to 2.2 BB", "Shove"],
+    correct: 1,
+    why: "A small open raise gets value while " +
+      "keeping weaker hands in the pot."
+  },
+  {
+    cards: "K♠ Q♠",
+    situation: "40 BB on the button. Folds to you. " +
+      "No ante. Both blinds have 40 BB.",
+    choices: ["Fold", "Raise to 2.2 BB", "Shove"],
+    correct: 1,
+    why: "KQs is a strong button opening hand. " +
+      "A standard small raise is appropriate."
+  },
+  {
+    cards: "9♣ 9♦",
+    situation: "8 BB in the small blind. Folds to " +
+      "you. Big blind covers you. No ante.",
+    choices: ["Fold", "Shove", "Raise to 3 BB"],
+    correct: 1,
+    why: "Pocket nines are very strong heads-up. " +
+      "Shoving is a straightforward option."
+  },
+  {
+    cards: "J♠ 4♦",
+    situation: "20 BB under the gun at a 9-handed " +
+      "table. No ante.",
+    choices: ["Shove", "Fold", "Raise to 2 BB"],
+    correct: 1,
+    why: "J4 offsuit is too weak to open from " +
+      "early position."
+  },
+  {
+    cards: "A♣ K♦",
+    situation: "35 BB on the button. Folds to you. " +
+      "No ante. Both blinds have 35 BB.",
+    choices: ["Raise to 2.2 BB", "Fold", "Shove"],
+    correct: 0,
+    why: "AK offsuit is a premium opening hand. " +
+      "A standard raise is preferable to " +
+      "open-shoving 35 BB."
+  },
+  {
+    cards: "Q♥ Q♣",
+    situation: "15 BB in the cutoff. Folds to you. " +
+      "No ante. Players behind cover you.",
+    choices: ["Fold", "Shove", "Limp"],
+    correct: 1,
+    why: "QQ is a premium hand. Shoving is a " +
+      "strong simplified option at 15 BB, " +
+      "though small raises can also work."
+  },
+  {
+    cards: "3♠ 2♦",
+    situation: "10 BB under the gun at a 9-handed " +
+      "table. No ante.",
+    choices: ["Shove", "Min-raise", "Fold"],
+    correct: 2,
+    why: "32 offsuit has poor equity and is " +
+      "not a profitable standard UTG shove."
+  },
+  {
+    cards: "A♠ J♠",
+    situation: "25 BB in the cutoff. Folds to you. " +
+      "No ante. Players behind have 25 BB.",
+    choices: ["Fold", "Shove", "Raise to 2.2 BB"],
+    correct: 2,
+    why: "AJs is a strong cutoff open. " +
+      "A small raise is a good default."
+  }
+];
+
+let index = 0;
+let points = 0;
+let answered = false;
+
+const progress = document.getElementById("progress");
+const score = document.getElementById("score");
+const title = document.getElementById("title");
+const cards = document.getElementById("cards");
+const situation = document.getElementById("situation");
+const choices = document.getElementById("choices");
+const feedback = document.getElementById("feedback");
+const next = document.getElementById("next");
+
+function showHand() {
+  answered = false;
+  const h = hands[index];
+
+  progress.textContent =
+    "Hand " + (index + 1) + " / " + hands.length;
+  score.textContent = "Score: " + points;
+  title.textContent = "Tournament Scenario";
+  cards.textContent = h.cards;
+  situation.textContent = h.situation;
+  feedback.textContent = "";
+  feedback.className = "";
+  choices.innerHTML = "";
+  next.hidden = true;
+
+  h.choices.forEach((choice, i) => {
+    const button = document.createElement("button");
+    button.textContent =
+      String.fromCharCode(65 + i) + ". " + choice;
+    button.addEventListener("click", () => answer(i));
+    choices.appendChild(button);
+  });
+}
+
+function answer(choice) {
+  if (answered) return;
+  answered = true;
+
+  const h = hands[index];
+  const correct = choice === h.correct;
+
+  if (correct) points++;
+
+  score.textContent = "Score: " + points;
+  feedback.className = correct ? "correct" : "incorrect";
+
+  const heading = document.createElement("strong");
+  heading.textContent = correct
+    ? "✓ Strong decision!"
+    : "Not the preferred answer.";
+
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "Preferred answer: " +
+    String.fromCharCode(65 + h.correct) +
+    ". " + h.choices[h.correct] + ". " + h.why;
+
+  feedback.append(heading, explanation);
+
+  choices.querySelectorAll("button").forEach(button => {
+    button.disabled = true;
+  });
+
+  next.hidden = false;
+  next.textContent = index === hands.length - 1
+    ? "See Final Score"
+    : "Next Hand →";
+}
+
+next.addEventListener("click", () => {
+  index++;
+
+  if (index === hands.length) {
+    progress.textContent = "Training Complete";
+    title.textContent = "Your Results";
+    cards.textContent = points + " / " + hands.length;
+    situation.textContent =
+      "You completed your first Poker IQ training session!";
+    choices.innerHTML = "";
+    feedback.textContent =
+      "These are simplified strategy exercises. " +
+      "We'll add more precise ranges and ICM " +
+      "analysis in future versions.";
+    feedback.className = "";
+    next.textContent = "Practice Again";
+    next.hidden = false;
+    index = hands.length + 1;
+  } else if (index > hands.length) {
+    index = 0;
+    points = 0;
+    showHand();
+  } else {
+    showHand();
+  }
+});
+
+showHand();
+</script>
 </body>
 </html>
