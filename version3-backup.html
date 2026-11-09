@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poker IQ | Tournament Trainer</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 16px;
+  background: #091321;
+  color: #f8fafc;
+  font-family: Arial, sans-serif;
+}
+main { max-width: 680px; margin: auto; }
+h1 { text-align: center; color: #38bdf8; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #94a3b8; }
+.panel {
+  background: #172638;
+  padding: 18px;
+  border-radius: 18px;
+  margin: 18px 0;
+}
+.stats {
+  display: flex;
+  justify-content: space-between;
+  color: #7dd3fc;
+  font-weight: bold;
+}
+.table-wrap {
+  padding: 34px 8px 20px;
+}
+.poker-table {
+  height: 260px;
+  position: relative;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #17744e, #06462f);
+  border: 12px solid #61432d;
+  box-shadow: 0 0 0 4px #b48a53, 0 12px 28px #0008;
+}
+.seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: #101e31;
+  border: 1px solid #64748b;
+  border-radius: 10px;
+  padding: 5px 8px;
+  font-size: 12px;
+  min-width: 68px;
+}
+.seat.hero {
+  border: 2px solid #38bdf8;
+  background: #164e63;
+}
+.s1 { left: 50%; top: -4%; }
+.s2 { left: 89%; top: 17%; }
+.s3 { left: 89%; top: 83%; }
+.s4 { left: 50%; top: 104%; }
+.s5 { left: 11%; top: 83%; }
+.s6 { left: 11%; top: 17%; }
+.cards {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 6px;
+}
+.playing-card {
+  background: white;
+  color: #111827;
+  width: 48px;
+  height: 68px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 23px;
+  font-weight: bold;
+  box-shadow: 0 3px 8px #0006;
+}
+.red { color: #dc2626; }
+#situation { line-height: 1.6; }
+button {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  background: #334155;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:hover { background: #475569; }
+button:disabled { opacity: .65; cursor: default; }
+#next { background: #0284c7; border: none; }
+#feedback { line-height: 1.6; }
+.correct { color: #86efac; }
+.incorrect { color: #fde68a; }
+@media(max-width:480px) {
+  .poker-table { height: 220px; border-width: 8px; }
+  .seat { min-width: 52px; padding: 4px; font-size: 10px; }
+  .playing-card { width: 40px; height: 56px; font-size: 20px; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1>♠ POKER IQ</h1>
+<p class="subtitle">Tournament Decision Trainer</p>
+
+<div class="panel">
+  <div class="stats">
+    <span id="progress"></span>
+    <span id="score"></span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="poker-table" id="table">
+      <div class="cards" id="cards"></div>
+    </div>
+  </div>
+
+  <h2 id="title">Tournament Scenario</h2>
+  <p id="situation"></p>
+  <h3 id="question">What's your move?</h3>
+  <div id="choices"></div>
+  <div id="feedback" aria-live="polite"></div>
+  <button id="next" hidden>Next Hand →</button>
+</div>
+</main>
+
+<script>
+const positions = ["UTG", "HJ", "CO", "BTN", "SB", "BB"];
+
+const hands = [
+  {
+    cards: ["A♠","8♠"], hero: "BTN", stack: 12,
+    situation: "12 BB on the button. Folds to you. No ante. Both blinds have 20 BB.",
+    choices: ["Fold","Raise to 2 BB","Shove"],
+    correct: 2,
+    why: "A8 suited is a reasonable shove candidate at 12 BB. Small raises can also work."
+  },
+  {
+    cards: ["7♣","2♦"], hero: "UTG", stack: 25,
+    situation: "25 BB under the gun at a six-handed table. No ante.",
+    choices: ["Open raise","Fold","Shove"],
+    correct: 1,
+    why: "72 offsuit is too weak to open from early position."
+  },
+  {
+    cards: ["A♥","A♦"], hero: "CO", stack: 30,
+    situation: "30 BB in the cutoff. Everyone folds to you. No ante.",
+    choices: ["Fold","Open raise to 2.2 BB","Shove"],
+    correct: 1,
+    why: "A small raise with aces gets value from weaker hands."
+  },
+  {
+    cards: ["K♠","Q♠"], hero: "BTN", stack: 40,
+    situation: "40 BB on the button. Everyone folds to you. No ante.",
+    choices: ["Fold","Raise to 2.2 BB","Shove"],
+    correct: 1,
+    why: "KQs is a strong button opening hand."
+  },
+  {
+    cards: ["9♣","9♦"], hero: "SB", stack: 8,
+    situation: "8 BB in the small blind. Folds to you. Big blind covers you.",
+    choices: ["Fold","Shove","Raise to 3 BB"],
+    correct: 1,
+    why: "Pocket nines are very strong heads-up. Shoving is straightforward."
+  },
+  {
+    cards: ["J♠","4♦"], hero: "UTG", stack: 20,
+    situation: "20 BB under the gun at a six-handed table. No ante.",
+    choices: ["Shove","Fold","Raise to 2 BB"],
+    correct: 1,
+    why: "J4 offsuit is too weak to open from early position."
+  },
+  {
+    cards: ["A♣","K♦"], hero: "BTN", stack: 35,
+    situation: "35 BB on the button. Folds to you. No ante.",
+    choices: ["Raise to 2.2 BB","Fold","Shove"],
+    correct: 0,
+    why: "AK offsuit is premium. A standard raise is preferable to open-shoving 35 BB."
+  },
+  {
+    cards: ["Q♥","Q♣"], hero: "CO", stack: 15,
+    situation: "15 BB in the cutoff. Folds to you. No ante.",
+    choices: ["Fold","Shove","Limp"],
+    correct: 1,
+    why: "QQ is premium. Shoving is a strong simplified option, although small raises may also work."
+  },
+  {
+    cards: ["3♠","2♦"], hero: "UTG", stack: 10,
+    situation: "10 BB under the gun at a six-handed table. No ante.",
+    choices: ["Shove","Min-raise","Fold"],
+    correct: 2,
+    why: "32 offsuit has poor equity and is not a standard profitable UTG shove."
+  },
+  {
+    cards: ["A♠","J♠"], hero: "CO", stack: 25,
+    situation: "25 BB in the cutoff. Folds to you. No ante.",
+    choices: ["Fold","Shove","Raise to 2.2 BB"],
+    correct: 2,
+    why: "AJs is a strong cutoff opening hand."
+  }
+];
+
+let index = 0;
+let points = 0;
+let answered = false;
+
+const table = document.getElementById("table");
+const cards = document.getElementById("cards");
+const progress = document.getElementById("progress");
+const score = document.getElementById("score");
+const title = document.getElementById("title");
+const situation = document.getElementById("situation");
+const question = document.getElementById("question");
+const choices = document.getElementById("choices");
+const feedback = document.getElementById("feedback");
+const next = document.getElementById("next");
+
+function drawTable(h) {
+  table.querySelectorAll(".seat").forEach(s => s.remove());
+
+  positions.forEach((position, i) => {
+    const seat = document.createElement("div");
+    seat.className = "seat s" + (i + 1);
+    if (position === h.hero) seat.classList.add("hero");
+
+    const stack = position === h.hero ? h.stack : 20;
+    seat.textContent =
+      position + (position === h.hero ? " (YOU)" : "") +
+      " | " + stack + " BB";
+    table.appendChild(seat);
+  });
+
+  cards.innerHTML = "";
+  h.cards.forEach(value => {
+    const card = document.createElement("div");
+    card.className = "playing-card";
+    if (value.includes("♥") || value.includes("♦")) {
+      card.classList.add("red");
+    }
+    card.textContent = value;
+    cards.appendChild(card);
+  });
+}
+
+function showHand() {
+  answered = false;
+  const h = hands[index];
+  progress.textContent = "Hand " + (index + 1) + " / " + hands.length;
+  score.textContent = "Score: " + points;
+  title.textContent = "Tournament Scenario";
+  situation.textContent = h.situation;
+  question.hidden = false;
+  feedback.textContent = "";
+  feedback.className = "";
+  choices.innerHTML = "";
+  next.hidden = true;
+
+  drawTable(h);
+
+  h.choices.forEach((choice, i) => {
+    const button = document.createElement("button");
+    button.textContent =
+      String.fromCharCode(65 + i) + ". " + choice;
+    button.addEventListener("click", () => answer(i));
+    choices.appendChild(button);
+  });
+}
+
+function answer(choice) {
+  if (answered) return;
+  answered = true;
+
+  const h = hands[index];
+  const correct = choice === h.correct;
+  if (correct) points++;
+
+  score.textContent = "Score: " + points;
+  feedback.className = correct ? "correct" : "incorrect";
+
+  const heading = document.createElement("strong");
+  heading.textContent = correct
+    ? "✓ Strong decision!"
+    : "Not the preferred answer.";
+
+  const explanation = document.createElement("p");
+  explanation.textContent =
+    "Preferred answer: " +
+    String.fromCharCode(65 + h.correct) +
+    ". " + h.choices[h.correct] + ". " + h.why;
+
+  feedback.append(heading, explanation);
+  choices.querySelectorAll("button").forEach(b => b.disabled = true);
+
+  next.hidden = false;
+  next.textContent =
+    index === hands.length - 1 ? "See Final Score" : "Next Hand →";
+}
+
+next.addEventListener("click", () => {
+  if (index === hands.length) {
+    index = 0;
+    points = 0;
+    showHand();
+    return;
+  }
+
+  index++;
+
+  if (index === hands.length) {
+    progress.textContent = "Training Complete";
+    title.textContent = "Your Results";
+    cards.innerHTML = "";
+    situation.textContent =
+      "You scored " + points + " out of " + hands.length + "!";
+    question.hidden = true;
+    choices.innerHTML = "";
+    feedback.textContent =
+      "Great practice! These are simplified strategy examples, not solver-verified GTO solutions.";
+    feedback.className = "";
+    next.textContent = "Practice Again";
+    next.hidden = false;
+  } else {
+    showHand();
+  }
+});
+
+showHand();
+</script>
+</body>
+</html>
